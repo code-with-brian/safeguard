@@ -1,0 +1,26 @@
+{
+  "name": "safeguard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SafeGuard - Parental Safety Monitoring Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "db:generate": "cd packages/database && prisma generate",
+    "db:migrate": "cd packages/database && prisma migrate dev",
+    "db:studio": "cd packages/database && prisma studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

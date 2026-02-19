@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Families
+model Family {
+  id                    String    @id @default(uuid())
+  name                  String
+  subscriptionTier      String    @default("free") @map("subscription_tier")
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  users    User[]
+  children Child[]
+  alerts   Alert[]
+  auditLogs AuditLog[]
+
+  @@map("families")
+}
+
+// Users (parents)
+model User {
+  id                       String   @id @default(uuid())
+  familyId                 String   @map("family_id")
+  email                    String   @unique
+  passwordHash             String   @map("password_hash")
+  firstName                String?  @map("first_name")
+  lastName                 String?  @map("last_name")
+  phone                    String?
+  notificationPreferences  Json?    @default("{}") @map("notification_preferences")
+  createdAt                DateTime @default(now()) @map("created_at")
+
+  family      Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  alerts      Alert[]     @relation("AcknowledgedBy")
+  auditLogs   AuditLog[]
+
+  @@map("users")
+}
+
+// Children
+model Child {
+  id              String   @id @default(uuid())
+  familyId        String   @map("family_id")
+  displayName     String   @map("display_name")
+  birthDate       DateTime? @map("birth_date")
+  deviceType      String?  @map("device_type") // 'ios', 'android'
+  deviceId        String?  @map("device_id")
+  isActive        Boolean  @default(true) @map("is_active")
+  safetyScore     Int      @default(100) @map("safety_score")
+  monitoredApps   Json?    @default("[]") @map("monitored_apps")
+  alertThreshold  String   @default("medium") @map("alert_threshold") // 'low', 'medium', 'high'
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  family              Family               @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  messages            Message[]
+  alerts              Alert[]
+  patternEvents       PatternEvent[]
+  wellbeingSnapshots  WellbeingSnapshot[]
+  deviceSessions      DeviceSession[]
+
+  @@map("children")
+}
+
+// Monitored Messages
+model Message {
+  id                String   @id @default(uuid())
+  childId           String   @map("child_id")
+  content           String?
+  contentHash       String?  @map("content_hash")
+  contentType       String   @default("text") @map("content_type") // 'text', 'image', 'video'
+  sourceApp         String?  @map("source_app") // 'sms', 'instagram', 'discord', etc.
+  senderId          String?  @map("sender_id")
+  senderName        String?  @map("sender_name")
+  senderType        String?  @map("sender_type") // 'contact', 'unknown', 'group'
+  conversationId    String?  @map("conversation_id")
+  sentAt            DateTime? @map("sent_at")
+  receivedAt        DateTime @default(now()) @map("received_at")
+  moderationStatus  String   @default("pending") @map("moderation_status") // 'pending', 'safe', 'flagged', 'blocked'
+  vettlyDecisionId  String?  @map("vettly_decision_id")
+  severityScore     Int?     @map("severity_score")
+  flaggedCategories Json?    @map("flagged_categories")
+  isAlertGenerated  Boolean  @default(false) @map("is_alert_generated")
+  alertId           String?  @map("alert_id")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, receivedAt])
+  @@index([conversationId, sentAt])
+  @@index([moderationStatus, receivedAt])
+  @@map("messages")
+}
+
+// Alerts
+model Alert {
+  id                String   @id @default(uuid())
+  familyId          String   @map("family_id")
+  childId           String   @map("child_id")
+  severity          String // 'critical', 'high', 'medium', 'low'
+  category          String // 'self_harm', 'cyberbullying', 'grooming', etc.
+  title             String
+  description       String?
+  contextMessages   Json?    @map("context_messages")
+  suggestedAction   String?  @map("suggested_action")
+  aiReasoning       String?  @map("ai_reasoning")
+  status            String   @default("new") // 'new', 'acknowledged', 'resolved', 'false_positive'
+  parentNotes       String?  @map("parent_notes")
+  acknowledgedAt    DateTime? @map("acknowledged_at")
+  acknowledgedBy    String?  @map("acknowledged_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  family          Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child           Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  acknowledgedByUser User?  @relation("AcknowledgedBy", fields: [acknowledgedBy], references: [id])
+
+  @@index([familyId, createdAt])
+  @@index([childId, severity, status])
+  @@map("alerts")
+}
+
+// Pattern Events (for ML detection)
+model PatternEvent {
+  id                String   @id @default(uuid())
+  childId           String   @map("child_id")
+  patternType       String   @map("pattern_type") // 'grooming', 'cyberbullying', 'emotional_decline'
+  confidenceScore   Float?   @map("confidence_score")
+  detectedSignals   Json?    @map("detected_signals")
+  startDate         DateTime @map("start_date")
+  endDate           DateTime? @map("end_date")
+  isActive          Boolean  @default(true) @map("is_active")
+  alertGenerated    Boolean  @default(false) @map("alert_generated")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("pattern_events")
+}
+
+// Wellbeing Snapshots
+model WellbeingSnapshot {
+  id                      String   @id @default(uuid())
+  childId                 String   @map("child_id")
+  snapshotDate            DateTime @map("snapshot_date")
+  overallScore            Int?     @map("overall_score")
+  moodScore               Int?     @map("mood_score")
+  socialScore             Int?     @map("social_score")
+  sleepScore              Int?     @map("sleep_score")
+  riskFactors             Json?    @map("risk_factors")
+  protectiveFactors       Json?    @map("protective_factors")
+  messageVolume           Int?     @map("message_volume")
+  lateNightActivityMinutes Int?    @map("late_night_activity_minutes")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, snapshotDate])
+  @@map("wellbeing_snapshots")
+}
+
+// Device Sessions
+model DeviceSession {
+  id          String    @id @default(uuid())
+  childId     String    @map("child_id")
+  deviceId    String?   @map("device_id")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+  ipAddress   String?   @map("ip_address")
+  locationLat Float?    @map("location_lat")
+  locationLng Float?    @map("location_lng")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("device_sessions")
+}
+
+// Audit Log
+model AuditLog {
+  id           String   @id @default(uuid())
+  familyId     String   @map("family_id")
+  userId       String?  @map("user_id")
+  action       String
+  resourceType String?  @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  details      Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@map("audit_log")
+}
