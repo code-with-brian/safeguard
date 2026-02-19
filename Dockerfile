@@ -6,6 +6,7 @@ WORKDIR /app
 RUN npm install -g bun
 COPY package.json turbo.json ./
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/database/package.json ./packages/database/
 COPY apps/web/package.json ./apps/web/
 RUN bun install
 COPY packages ./packages
