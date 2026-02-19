@@ -28,4 +28,4 @@ ENV PORT=3000
 EXPOSE 3000
 
 # Start command
-CMD ["sh", "-c", "cd apps/web && npm start"]
+CMD ["sh", "/app/apps/web/start.sh"]
