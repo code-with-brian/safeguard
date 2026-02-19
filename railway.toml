@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.web"
+
+[deploy]
+startCommand = "cd apps/web && npx next start -p 3000"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
