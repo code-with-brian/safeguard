@@ -10,6 +10,7 @@ export interface User {
 
 export interface Variables {
   user: User;
+  [key: string]: any;
 }
 
 export type Context = HonoContext<{ Variables: Variables }>;
