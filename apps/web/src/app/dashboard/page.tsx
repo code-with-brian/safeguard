@@ -24,7 +24,7 @@ import { formatRelativeTime } from '@/lib/utils';
 export default function DashboardPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<any>(null);
   const [activities, setActivities] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
@@ -41,6 +41,7 @@ export default function DashboardPage() {
   }, [isAuthenticated, authLoading, router]);
 
   const loadDashboardData = async () => {
+    setIsLoading(true);
     try {
       const [summaryRes, activitiesRes, statsRes] = await Promise.all([
         dashboardApi.summary(),

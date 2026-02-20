@@ -26,7 +26,7 @@ export default function ChildDetailPage() {
   const params = useParams();
   const childId = params.id as string;
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [child, setChild] = useState<any>(null);
   const [activity, setActivity] = useState<any>(null);
   const [alerts, setAlerts] = useState<any[]>([]);

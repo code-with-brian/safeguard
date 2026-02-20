@@ -32,7 +32,7 @@ interface Child {
 export default function ChildrenPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [children, setChildren] = useState<Child[]>([]);
   const [showMenu, setShowMenu] = useState<string | null>(null);
 
