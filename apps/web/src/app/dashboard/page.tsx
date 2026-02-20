@@ -68,16 +68,25 @@ export default function DashboardPage() {
     }
   };
 
-  if (authLoading || isLoading) {
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Please sign in to access the dashboard</p>
+          <a href="/login" className="text-primary-600 hover:text-primary-500 font-medium">
+            Go to Login →
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return null;
   }
 
   return (
