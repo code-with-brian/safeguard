@@ -37,4 +37,4 @@ ENV PORT=3001
 EXPOSE 3001
 
 # Start command with migration
-CMD ["sh", "-c", "cd packages/database && npx prisma migrate deploy && cd ../.. && bun apps/api/src/index.ts"]
+CMD ["sh", "-c", "cd packages/database && bunx prisma migrate deploy && cd ../.. && bun apps/api/src/index.ts"]
