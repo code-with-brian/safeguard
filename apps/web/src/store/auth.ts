@@ -34,6 +34,12 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'safeguard-auth',
+      onRehydrateStorage: () => (state) => {
+        // Set loading to false after rehydration completes
+        if (state) {
+          state.isLoading = false;
+        }
+      },
     }
   )
 );
